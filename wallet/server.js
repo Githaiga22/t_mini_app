@@ -6,12 +6,13 @@ import { base } from "thirdweb/chains";
 import dotenv from "dotenv";
 
 dotenv.config(); // Load environment variables
+// let BASENAME_RESOLVER_ADDRESS "0xC6d566A56A1aFf6508b41f6c90ff131615583BCD";
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Connect to Base Mainnet
-const provider = new ethers.providers.JsonRpcProvider("https://mainnet.base.org");
+const provider = new ethers.JsonRpcProvider("https://mainnet.base.org");
 const sdk = ThirdwebSDK.fromProvider(provider);
 
 // Middleware to parse JSON requests
@@ -28,7 +29,7 @@ async function resolveBaseName(baseName) {
             resolverChain: base,
         });
 
-        if (!recipientAddress || recipientAddress === ethers.constants.AddressZero) {
+        if (!recipientAddress || recipientAddress === ethers.ZeroAddress) {
             console.error("Error: Could not resolve Base Name.");
             return null;
         }
@@ -55,7 +56,7 @@ async function sendEth(toAddress, amountInEth, senderPrivateKey) {
         // Create a transaction
         const tx = await wallet.sendTransaction({
             to: toAddress,
-            value: ethers.utils.parseEther(amountInEth),
+            value: ethers.parseEther(amountInEth),
         });
 
         console.log(`Transaction sent! Tx Hash: ${tx.hash}`);
