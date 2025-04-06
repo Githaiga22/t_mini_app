@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "@thirdweb-dev/sdk": "^4.0.73",
-    "dotenv": "^16.4.7",
-    "ethers": "^5.7.2",
-    "express": "^4.21.2"
-  }
-}
