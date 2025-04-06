@@ -137,7 +137,7 @@ func getContext(input string, chatId int64, userId int64) string {
 	if strings.Contains(input, "help") {
 		return "I want to know about Zapbase."
 	}
-	return "what options are available to me?"
+	return input
 }
 
 func handleSendingEthContext(userMessage string, chatID int64, userID int64) string {
