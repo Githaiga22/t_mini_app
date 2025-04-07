@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/joho/godotenv"
+	// "github.com/joho/godotenv"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -27,10 +27,10 @@ type TransferIntent struct {
 var pendingTransfers = make(map[int64]TransferIntent) // chatID → intent
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatalf("Error loading .env file: %v", err)
+	// }
 
 	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 
