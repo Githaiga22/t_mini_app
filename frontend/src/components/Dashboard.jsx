@@ -1,4 +1,7 @@
+
 import { Plus } from 'lucide-react'
+import { WalletDefault } from '@coinbase/onchainkit/wallet';
+
 
 function Dashboard() {
   return (
@@ -16,9 +19,9 @@ function Dashboard() {
               <p className="font-semibold">Lissa</p>
             </div>
           </div>
-          <button className="bg-primary text-dark px-4 py-2 rounded-full text-sm font-semibold">
-            Connect Wallet
-          </button>
+ 
+        <WalletDefault />
+
         </div>
 
         <div className="bg-gray-900 rounded-2xl p-6 mb-6">

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Zap, MessageCircle, Bot, Rocket, Plus, Bitcoin } from 'lucide-react'
-import SplashScreen from './components/SplashScreen'
-import OnboardingScreen from './components/OnboardingScreen'
-import Dashboard from './components/Dashboard'
+import SplashScreen from './SplashScreen'
+import OnboardingScreen from './OnboardingScreen'
+import Dashboard from './Dashboard'
 
 const screens = {
   SPLASH: 'splash',
@@ -10,7 +10,7 @@ const screens = {
   DASHBOARD: 'dashboard'
 }
 
-function App() {
+function ZapBaseApp() {
   const [currentScreen, setCurrentScreen] = useState(screens.SPLASH)
   const [onboardingStep, setOnboardingStep] = useState(0)
 
@@ -67,4 +67,4 @@ function App() {
   )
 }
 
-export default App
+export default ZapBaseApp
