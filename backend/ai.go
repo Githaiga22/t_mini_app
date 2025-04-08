@@ -7,8 +7,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-
-	"github.com/joho/godotenv"
 )
 
 // Structs for parsing the Gemini response JSON
@@ -32,10 +30,10 @@ type GeminiResponse struct {
 
 // Function to get AI response from Gemini
 func getAIResponseGemini(input string) (string, error) {
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Printf("Error loading .env file: %v", err)
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	fmt.Printf("Error loading .env file: %v", err)
+	// }
 	context := "You are a helpful assistant called Frechi for a crypto application called ZapBase. Be empathetic and respond with clear, concise instructions. The user can ask for their balance, transfer ETH using a wallet address or basename i.e username.base.eth, check token prices, or tip the app Zapbase'. Please respond to the following message:"
 	// Gemini API URL
 	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + os.Getenv("GEMINI_API_KEY")

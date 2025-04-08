@@ -16,7 +16,6 @@ import (
 	// "github.com/joho/godotenv"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/joho/godotenv"
 )
 
 var transferData = make(map[int64]map[string]string) // Store data for each user by chat ID
@@ -29,10 +28,10 @@ type TransferIntent struct {
 var pendingTransfers = make(map[int64]TransferIntent) // chatID → intent
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Printf("Error loading .env file: %v", err)
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	fmt.Printf("Error loading .env file: %v", err)
+	// }
 
 	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	publicURL := os.Getenv("PUBLIC_URL")
@@ -59,7 +58,6 @@ func main() {
 
 	updates := bot.ListenForWebhook("/")
 
-
 	// Health check route for Render
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Bot is running.")
@@ -71,19 +69,15 @@ func main() {
 		log.Fatal(http.ListenAndServe(":10000", nil))
 	}()
 
-
 	for update := range updates {
 		if update.Message == nil || update.Message.From.ID == bot.Self.ID {
 			continue
 		}
 
-		handleUpdate(bot, update)	
+		handleUpdate(bot, update)
 
-
-		
 		// }
 	}
-
 }
 
 func getContext(input string, chatId int64, userId int64) string {
@@ -195,8 +189,7 @@ func sendingETH(amount float64, token string, recipient string) string {
 	return fmt.Sprintf("Transfer succeeded! Check the Transaction hash https://sepolia.basescan.org/tx/%s", txHash)
 }
 
-
-func handleUpdate(bot *tgbotapi.BotAPI, update tgbotapi.Update){
+func handleUpdate(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	userText := update.Message.Text
 	chatID := update.Message.Chat.ID
 	userID := update.Message.From.ID
