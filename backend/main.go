@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
 	"strconv"
@@ -15,6 +16,7 @@ import (
 	// "github.com/joho/godotenv"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/joho/godotenv"
 )
 
 var transferData = make(map[int64]map[string]string) // Store data for each user by chat ID
@@ -27,12 +29,14 @@ type TransferIntent struct {
 var pendingTransfers = make(map[int64]TransferIntent) // chatID → intent
 
 func main() {
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatalf("Error loading .env file: %v", err)
-	// }
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Printf("Error loading .env file: %v", err)
+	}
 
 	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	publicURL := os.Getenv("PUBLIC_URL")
+	// https://t-mini-app.onrender.com
 
 	bot, err := tgbotapi.NewBotAPI(botToken)
 	if err != nil {
@@ -40,96 +44,45 @@ func main() {
 	}
 
 	bot.Debug = true
-
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-	// Set up Telegram updates
-	updates := bot.GetUpdatesChan(u)
+	webhookURL := publicURL + "/" // Telegram will POST updates here
+	parsedURL, err := url.Parse(webhookURL)
+	if err != nil {
+		log.Fatalf("Invalid webhook URL: %v", err)
+	}
+	webhookConfig := tgbotapi.WebhookConfig{URL: parsedURL}
+	_, err = bot.Request(webhookConfig)
+	if err != nil {
+		log.Fatalf("Failed to set webhook: %v", err)
+	}
+
+	updates := bot.ListenForWebhook("/")
+
+
+	// Health check route for Render
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "Bot is running.")
+	})
+
+	// Start server in background
+	go func() {
+		log.Println("Starting HTTP server on :10000")
+		log.Fatal(http.ListenAndServe(":10000", nil))
+	}()
+
 
 	for update := range updates {
 		if update.Message == nil || update.Message.From.ID == bot.Self.ID {
 			continue
 		}
 
-		userText := update.Message.Text
-		chatID := update.Message.Chat.ID
-		userID := update.Message.From.ID
-		log.Printf("User (%d): %s", userID, userText)
-		// if update.Message != nil { // If we receive a message
-		if update.Message.Text != "" { // Handle text messages
+		handleUpdate(bot, update)	
 
-			// Check if user confirmed a transfer
-			if strings.ToLower(userText) == "yes" {
-				intent, exists := pendingTransfers[chatID]
-				if exists {
-					result := sendingETH(intent.Amount, intent.Token, intent.To)
-					delete(pendingTransfers, chatID)
-					bot.Send(tgbotapi.NewMessage(chatID, result))
-					continue
-				}
-			}
 
-			// Check if user wants to send ETH
-			// Detect transfer command
-			if strings.HasPrefix(strings.ToLower(userText), "send") && strings.Contains(userText, "eth") {
-				handleSendingEthContext(userText, userID, chatID)
-				// Extract transfer details
-
-				amount, exists := transferData[chatID]["amount"]
-				if !exists {
-					bot.Send(tgbotapi.NewMessage(chatID, "I couldn't find the amount you want to send. Please specify it in the format 'send <amount> eth to <recipient>'"))
-					continue
-				}
-				// Convert amount to float
-				amountFloat, err := strconv.ParseFloat(amount, 64)
-				if err != nil {
-					bot.Send(tgbotapi.NewMessage(chatID, "I couldn't parse the amount you provided. Please specify it in the format 'send <amount> <eth> to <recipient>'"))
-					continue
-				}
-				// Extract token and recipient
-				token, exists := transferData[chatID]["token"]
-				if !exists {
-					bot.Send(tgbotapi.NewMessage(chatID, "I couldn't find the token you want to send. Please specify it in the format 'send <amount> eth to <recipient>'"))
-					continue
-				}
-				recipient, exists := transferData[chatID]["recipient"]
-				if !exists {
-					bot.Send(tgbotapi.NewMessage(chatID, "I couldn't find the recipient you want to send to. Please specify it in the format 'send <amount> eth to <recipient>'"))
-					continue
-				}
-
-				if amountFloat > 0 && recipient != "" {
-					pendingTransfers[chatID] = TransferIntent{Amount: amountFloat, To: recipient, Token: token}
-					response := fmt.Sprintf("Kindly confirm you want to send %f %s to %s. Reply with 'yes' to confirm.", amountFloat, token, recipient)
-					bot.Send(tgbotapi.NewMessage(chatID, response))
-					continue
-				}
-			}
-
-			response, err := getAIResponseGemini(getContext(update.Message.Text, update.Message.Chat.ID, update.Message.From.ID))
-			if err != nil {
-				log.Printf("Error getting AI response: %v", err)
-				bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Oops! Something went wrong."))
-				continue
-			}
-			// Simple safeguard for repeated phrases
-			if strings.Count(response, "I'm sorry") > 3 {
-				response = "Hmm... I didn’t quite get that. Could you rephrase?"
-			}
-
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, response)
-			bot.Send(msg)
-		}
+		
 		// }
 	}
-
-	// run a server
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, world!")
-	})
-	log.Fatal(http.ListenAndServe(":8080", nil))
 
 }
 
@@ -158,9 +111,9 @@ func handleSendingEthContext(userMessage string, chatID int64, userID int64) str
 
 	if len(matches) > 0 {
 		// Extract transfer details
-		amount := matches[1]                  // Amount to send
-		token := matches[2]                   // Token type (ETH or custom token)
-		recipient := matches[3]  // Recipient's Base name
+		amount := matches[1]    // Amount to send
+		token := matches[2]     // Token type (ETH or custom token)
+		recipient := matches[3] // Recipient's Base name
 
 		// Store the transfer details in a map for later use
 		transferData[chatID] = map[string]string{
@@ -240,4 +193,77 @@ func sendingETH(amount float64, token string, recipient string) string {
 		return "Transfer failed due to insufficient funds. Top up your wallet here: https://zapbase-imara1.vercel.app/"
 	}
 	return fmt.Sprintf("Transfer succeeded! Check the Transaction hash https://sepolia.basescan.org/tx/%s", txHash)
+}
+
+
+func handleUpdate(bot *tgbotapi.BotAPI, update tgbotapi.Update){
+	userText := update.Message.Text
+	chatID := update.Message.Chat.ID
+	userID := update.Message.From.ID
+	log.Printf("User (%d): %s", userID, userText)
+	// if update.Message != nil { // If we receive a message
+	if update.Message.Text != "" { // Handle text messages
+
+		// Check if user confirmed a transfer
+		if strings.ToLower(userText) == "yes" {
+			intent, exists := pendingTransfers[chatID]
+			if exists {
+				result := sendingETH(intent.Amount, intent.Token, intent.To)
+				delete(pendingTransfers, chatID)
+				bot.Send(tgbotapi.NewMessage(chatID, result))
+				return
+			}
+		}
+
+		// Check if user wants to send ETH
+		// Detect transfer command
+		if strings.HasPrefix(strings.ToLower(userText), "send") && strings.Contains(userText, "eth") {
+			handleSendingEthContext(userText, userID, chatID)
+			// Extract transfer details
+
+			amount, exists := transferData[chatID]["amount"]
+			if !exists {
+				bot.Send(tgbotapi.NewMessage(chatID, "I couldn't find the amount you want to send. Please specify it in the format 'send <amount> eth to <recipient>'"))
+				return
+			}
+			// Convert amount to float
+			amountFloat, err := strconv.ParseFloat(amount, 64)
+			if err != nil {
+				bot.Send(tgbotapi.NewMessage(chatID, "I couldn't parse the amount you provided. Please specify it in the format 'send <amount> <eth> to <recipient>'"))
+				return
+			}
+			// Extract token and recipient
+			token, exists := transferData[chatID]["token"]
+			if !exists {
+				bot.Send(tgbotapi.NewMessage(chatID, "I couldn't find the token you want to send. Please specify it in the format 'send <amount> eth to <recipient>'"))
+				return
+			}
+			recipient, exists := transferData[chatID]["recipient"]
+			if !exists {
+				bot.Send(tgbotapi.NewMessage(chatID, "I couldn't find the recipient you want to send to. Please specify it in the format 'send <amount> eth to <recipient>'"))
+				return
+			}
+
+			if amountFloat > 0 && recipient != "" {
+				pendingTransfers[chatID] = TransferIntent{Amount: amountFloat, To: recipient, Token: token}
+				response := fmt.Sprintf("Kindly confirm you want to send %f %s to %s. Reply with 'yes' to confirm.", amountFloat, token, recipient)
+				bot.Send(tgbotapi.NewMessage(chatID, response))
+				return
+			}
+		}
+
+		response, err := getAIResponseGemini(getContext(update.Message.Text, update.Message.Chat.ID, update.Message.From.ID))
+		if err != nil {
+			log.Printf("Error getting AI response: %v", err)
+			bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Oops! Something went wrong."))
+			return
+		}
+		// Simple safeguard for repeated phrases
+		if strings.Count(response, "I'm sorry") > 3 {
+			response = "Hmm... I didn’t quite get that. Could you rephrase?"
+		}
+
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, response)
+		bot.Send(msg)
+	}
 }

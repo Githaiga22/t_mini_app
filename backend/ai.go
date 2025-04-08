@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 // Structs for parsing the Gemini response JSON
@@ -30,7 +32,11 @@ type GeminiResponse struct {
 
 // Function to get AI response from Gemini
 func getAIResponseGemini(input string) (string, error) {
-	context := "You are a helpful assistant called Frechi for a crypto application called ZapBase. Be empathetic and respond with clear, concise instructions. The user can ask for their balance, transfer ETH using a wallet address or basename i.e username.base.eth, check token prices, or tip the app Zapbase'. If the request is outside these actions, inform them of what they can do.. Please respond to the following message:"
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Printf("Error loading .env file: %v", err)
+	}
+	context := "You are a helpful assistant called Frechi for a crypto application called ZapBase. Be empathetic and respond with clear, concise instructions. The user can ask for their balance, transfer ETH using a wallet address or basename i.e username.base.eth, check token prices, or tip the app Zapbase'. Please respond to the following message:"
 	// Gemini API URL
 	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + os.Getenv("GEMINI_API_KEY")
 
@@ -72,6 +78,7 @@ func getAIResponseGemini(input string) (string, error) {
 		return "", err
 	}
 
+	fmt.Println("Gemini Response:", string(body))
 	// Extract the generated text from the response
 	if len(geminiResp.Candidates) > 0 && len(geminiResp.Candidates[0].Content.Parts) > 0 {
 		return geminiResp.Candidates[0].Content.Parts[0].Text, nil
