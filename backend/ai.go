@@ -76,7 +76,7 @@ func getAIResponseGemini(input string) (string, error) {
 		return "", err
 	}
 
-	fmt.Println("Gemini Response:", string(body))
+	// fmt.Println("Gemini Response:", string(body))
 	// Extract the generated text from the response
 	if len(geminiResp.Candidates) > 0 && len(geminiResp.Candidates[0].Content.Parts) > 0 {
 		return geminiResp.Candidates[0].Content.Parts[0].Text, nil
