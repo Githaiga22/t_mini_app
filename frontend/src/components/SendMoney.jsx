@@ -1,26 +1,26 @@
 import { ArrowLeft, Mic } from 'lucide-react'
 
-function SendMoney({ onBack, onSend }) {
+function SendMoney({ onBack, onSend, onNext }) {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white p-5">
       <div className="max-w-md mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
-          <button onClick={onBack} className="p-2">
+          <button onClick={onNext} className="p-2">
             <ArrowLeft className="w-6 h-6" />
           </button>
           <h1 className="text-xl font-semibold">Send money</h1>
         </div>
 
-        {/* AI Input */}
-        <div className="bg-white/5 rounded-full p-3 mb-8 flex items-center gap-2 border border-white/10">
+      {/* AI Button */}
+      <button 
+          onClick={onSend}
+          className="w-full bg-white/5 rounded-full p-3 mb-8 flex items-center gap-2 border border-white/10"
+        >
           <Mic className="w-5 h-5 text-[#00FF7F]" />
-          <input
-            type="text"
-            placeholder="Use AI to send money now"
-            className="bg-transparent flex-1 outline-none"
-          />
-        </div>
+          <span>Use AI to send money now</span>
+        </button>
+
 
         {/* Pay with section */}
         <div className="mb-8">
