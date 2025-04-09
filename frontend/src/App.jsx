@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { MessageCircle, Bot, Rocket } from 'lucide-react'
-import SplashScreen from './components/SplashScreen'
-import OnboardingScreen from './components/OnboardingScreen'
-import Dashboard from './components/Dashboard'
-import SendMoney from './components/SendMoney'
-import Confirmation from './components/Confirmation'
-import Success from './components/Success'
+import SplashScreen from './components/SplashScreen.jsx'
+import OnboardingScreen from './components/OnboardingScreen.jsx'
+import Dashboard from './components/Dashboard.jsx'
+import SendMoney from './components/SendMoney.jsx'
 import SendMoneyAI from './components/SendMoneyAI.jsx'
+import SendMoneyAIText from './components/SendMoneyAIText.jsx'
+import SendMoneyAIVoice from './components/SendMoneyAIVoice.jsx'
+import Confirmation from './components/Confirmation.jsx'
+import Success from './components/Success.jsx'
+import Message from './components/Message.jsx'
 
 const screens = {
   SPLASH: 'splash',
@@ -14,8 +17,11 @@ const screens = {
   DASHBOARD: 'dashboard',
   SEND: 'send',
   SEND_AI: 'send_ai',
+  SEND_AI_TEXT: 'send_ai_text',
+  SEND_AI_VOICE: 'send_ai_voice',
   CONFIRMATION: 'confirmation',
-  SUCCESS: 'success'
+  SUCCESS: 'success',
+  MESSAGE: 'message'
 }
 
 function App() {
@@ -64,6 +70,14 @@ function App() {
     setCurrentScreen(screens.DASHBOARD)
   }
 
+  const handleSendMoneyAction = (type) => {
+    if (type === 'ai') {
+      setCurrentScreen(screens.SEND_AI)
+    } else {
+      setCurrentScreen(screens.CONFIRMATION)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
       {currentScreen === screens.SPLASH && (
@@ -83,18 +97,30 @@ function App() {
       {currentScreen === screens.SEND && (
         <SendMoney
           onBack={handleBack}
-          onSend={() => setCurrentScreen(screens.CONFIRMATION)}
+          onSend={handleSendMoneyAction}
         />
       )}
-        {currentScreen === screens.SEND_AI && (
+      {currentScreen === screens.SEND_AI && (
         <SendMoneyAI
           onBack={() => setCurrentScreen(screens.SEND)}
-          onNext={() => setCurrentScreen(screens.SEND_AI)}
+          onNext={() => setCurrentScreen(screens.SEND_AI_TEXT)}
+        />
+      )}
+      {currentScreen === screens.SEND_AI_TEXT && (
+        <SendMoneyAIText
+          onBack={() => setCurrentScreen(screens.SEND_AI)}
+          onNext={() => setCurrentScreen(screens.SEND_AI_VOICE)}
+        />
+      )}
+      {currentScreen === screens.SEND_AI_VOICE && (
+        <SendMoneyAIVoice
+          onBack={() => setCurrentScreen(screens.SEND_AI_TEXT)}
+          onConfirm={() => setCurrentScreen(screens.CONFIRMATION)}
         />
       )}
       {currentScreen === screens.CONFIRMATION && (
         <Confirmation
-          onBack={() => setCurrentScreen(screens.SEND)}
+          onBack={() => setCurrentScreen(screens.SEND_AI_VOICE)}
           onConfirm={() => setCurrentScreen(screens.SUCCESS)}
           amount={transactionDetails.amount}
           receiver={transactionDetails.receiver}
@@ -103,6 +129,15 @@ function App() {
       {currentScreen === screens.SUCCESS && (
         <Success
           onBack={() => setCurrentScreen(screens.DASHBOARD)}
+          onViewMessage={() => setCurrentScreen(screens.MESSAGE)}
+          onDashboard={() => setCurrentScreen(screens.DASHBOARD)}
+          amount={transactionDetails.amount}
+          receiver={transactionDetails.receiver}
+        />
+      )}
+      {currentScreen === screens.MESSAGE && (
+        <Message
+          onBack={() => setCurrentScreen(screens.SUCCESS)}
           amount={transactionDetails.amount}
           receiver={transactionDetails.receiver}
         />
