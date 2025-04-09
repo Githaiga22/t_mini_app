@@ -1,26 +1,34 @@
 import { ArrowLeft, Mic } from 'lucide-react'
+import { useState } from 'react'
 
-function SendMoney({ onBack, onSend, onNext }) {
+function SendMoney({ onBack, onSend }) {
+  const [amount, setAmount] = useState('0.5')
+  const [receiver, setReceiver] = useState('John.base.eth')
+
+  const handleSendMoney = () => {
+    // Go directly to confirmation screen
+    onSend()
+  }
+
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white p-5">
       <div className="max-w-md mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
-          <button onClick={onNext} className="p-2">
+          <button onClick={onBack} className="p-2">
             <ArrowLeft className="w-6 h-6" />
           </button>
           <h1 className="text-xl font-semibold">Send money</h1>
         </div>
 
-      {/* AI Button */}
-      <button 
-          onClick={onSend}
+        {/* AI Button */}
+        <button 
+          onClick={() => onSend('ai')}
           className="w-full bg-white/5 rounded-full p-3 mb-8 flex items-center gap-2 border border-white/10"
         >
           <Mic className="w-5 h-5 text-[#00FF7F]" />
           <span>Use AI to send money now</span>
         </button>
-
 
         {/* Pay with section */}
         <div className="mb-8">
@@ -39,6 +47,8 @@ function SendMoney({ onBack, onSend, onNext }) {
           <input
             type="text"
             placeholder="Input amount"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
             className="w-full bg-transparent border-b border-white/20 py-2 outline-none"
           />
         </div>
@@ -49,12 +59,14 @@ function SendMoney({ onBack, onSend, onNext }) {
           <input
             type="text"
             placeholder="Input Domain Name"
+            value={receiver}
+            onChange={(e) => setReceiver(e.target.value)}
             className="w-full bg-white/5 rounded-full p-3 outline-none"
           />
         </div>
 
         <button
-          onClick={onSend}
+          onClick={handleSendMoney}
           className="w-full bg-[#00FF7F] text-black font-semibold py-4 rounded-full"
         >
           Send Money
