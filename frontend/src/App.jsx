@@ -6,12 +6,14 @@ import Dashboard from './components/Dashboard'
 import SendMoney from './components/SendMoney'
 import Confirmation from './components/Confirmation'
 import Success from './components/Success'
+import SendMoneyAI from './components/SendMoneyAI.jsx'
 
 const screens = {
   SPLASH: 'splash',
   ONBOARDING: 'onboarding',
   DASHBOARD: 'dashboard',
   SEND: 'send',
+  SEND_AI: 'send_ai',
   CONFIRMATION: 'confirmation',
   SUCCESS: 'success'
 }
@@ -82,6 +84,12 @@ function App() {
         <SendMoney
           onBack={handleBack}
           onSend={() => setCurrentScreen(screens.CONFIRMATION)}
+        />
+      )}
+        {currentScreen === screens.SEND_AI && (
+        <SendMoneyAI
+          onBack={() => setCurrentScreen(screens.SEND)}
+          onNext={() => setCurrentScreen(screens.SEND_AI)}
         />
       )}
       {currentScreen === screens.CONFIRMATION && (
