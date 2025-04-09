@@ -1,6 +1,6 @@
 import { ArrowLeft, Check } from 'lucide-react'
 
-function Success({ onBack, amount, receiver }) {
+function Success({ onBack, onViewMessage, onDashboard, amount, receiver }) {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white p-5">
       <div className="max-w-md mx-auto">
@@ -23,10 +23,16 @@ function Success({ onBack, amount, receiver }) {
         </div>
 
         <div className="space-y-4">
-          <button className="w-full bg-[#00FF7F] text-black font-semibold py-4 rounded-full">
+          <button 
+            onClick={onViewMessage}
+            className="w-full bg-[#00FF7F] text-black font-semibold py-4 rounded-full"
+          >
             View Telegram message
           </button>
-          <button className="w-full bg-white/10 text-white font-semibold py-4 rounded-full">
+          <button 
+            onClick={onDashboard}
+            className="w-full bg-white/10 text-white font-semibold py-4 rounded-full"
+          >
             Go to Dashboard
           </button>
         </div>
