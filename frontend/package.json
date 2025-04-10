@@ -14,9 +14,12 @@
   },
   "dependencies": {
     "@coinbase/onchainkit": "^0.38.2",
-    "@thirdweb-dev/sdk": "^4.0.73",
+    "@coinbase/wallet-sdk": "^4.3.2",
+    "@thirdweb-dev/react": "^4.9.4",
+    "@thirdweb-dev/sdk": "^4.0.99",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
+    "ethers": "^5.8.0",
     "express": "^5.1.0",
     "lucide-react": "^0.359.0",
     "react": "^18.3.1",
