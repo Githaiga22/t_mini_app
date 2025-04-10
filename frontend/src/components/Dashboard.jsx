@@ -1,8 +1,36 @@
 import { Plus, Home, History, Bell, Settings, Send, ReceiptText, ArrowLeft, Mic } from 'lucide-react'
 import { useState } from 'react'
+import { ConnectWallet, useAddress, useSigner,  useDisconnect } from "@thirdweb-dev/react"
+
 
 function Dashboard({ onNavigate }) {
   const [showAIPopup, setShowAIPopup] = useState(false)
+  const address = useAddress()
+  const signer = useSigner()
+
+  // Optional: Sign a message to authenticate
+  const signMessage = async () => {
+    if (!signer) {
+      console.error("Signer not found")
+      return
+    }
+
+    try {
+      const message = "Sign this message to authenticate"
+      const signature = await signer.signMessage(message)
+      console.log("Signature:", signature)
+      alert("Successfully authenticated with wallet signature!")
+    } catch (error) {
+      console.error("Error signing message:", error)
+      alert("Failed to sign message: " + error.message)
+    }
+  }
+
+  // Shorten wallet address helper
+  const formatAddress = (addr) => {
+    if (!addr) return ''
+    return `${addr.slice(0, 4)}...${addr.slice(-3)}`
+  }
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white relative">
@@ -20,10 +48,46 @@ function Dashboard({ onNavigate }) {
               <p className="font-semibold text-lg">Lissa</p>
             </div>
           </div>
-          <button className="bg-red-500 text-white px-4 py-2 rounded-full text-sm font-medium">
-            Connect Wallet
-          </button>
+
+          {/* ✅ Custom styled connect wallet button */}
+          <div className="text-right">
+            {!address ? (
+              <ConnectWallet
+                theme="dark"
+                className="!bg-green-500 !text-white !px-4 !py-2 !rounded-full !text-sm !font-medium"
+                btnTitle="Connect Wallet"
+              />
+            ) : (
+              <div>
+                <p className="text-green-400 text-sm mb-1 font-semibold">
+                  {formatAddress(address)}
+                </p>
+                <button
+                  className="bg-green-700 text-white px-4 py-2 rounded-full text-sm font-medium"
+                  onClick={signMessage}
+                >
+                  Sign to Authenticate
+                </button>
+              </div>
+            )}
+
+            {/* Optional Help Link */}
+            {!address && (
+              <p className="text-gray-400 text-xs mt-1">
+                New to wallets?{' '}
+                <a
+                  href="https://www.coinbase.com/wallet"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-blue-400"
+                >
+                  Learn & Create
+                </a>
+              </p>
+            )}
+          </div>
         </div>
+
 
         {/* AI Command Input */}
         <button 
