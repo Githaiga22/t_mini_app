@@ -36,6 +36,43 @@ This repository contains our submission for the **Virtuals Hackathon**, where we
 - `/demo`: Any demo files or links.
 
 ---
+## Speech-to-Text Backend API
+
+### Overview
+This backend service provides audio transcription capabilities using the Groq AI platform. It accepts audio file uploads and returns text transcriptions along with timestamps for segments and individual words.
+
+### Prerequisites
+- Node.js (v14 or higher)
+- npm
+- A Groq API key (sign up at https://console.groq.com/)
+
+### Setup
+
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
+2. **Configure environment variables**
+```
+   GROQ_API_KEY=your_groq_api_key_here
+```
+
+3. **Start the API server**
+```
+cd frontend
+npm run start:api
+```
+Using the API
+Endpoint: Transcribe Audio
+``POST /api/aiagents/transcribe``
+
+
+Example using cURL:
+
+```
+curl -X POST http://localhost:3000/api/aiagents/transcribe   -H "Content-Type: multipart/form-data"   
+-F "audio=@/home/ken/Projects/t_mini_app/frontend/uploads/voicemail.mp3"
+```
 
 ## Deadlines
 
