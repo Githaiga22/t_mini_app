@@ -3,6 +3,7 @@ import { Mic } from 'lucide-react';
 
 function SendMoney({ onBack, onSend }) {
   const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [conversations, setConversations] = useState([
     // Initial examples to show the chat layout
     { type: 'user', text: "How do I reset my password?" },
@@ -53,54 +54,85 @@ function SendMoney({ onBack, onSend }) {
   const stopRecording = async () => {
     if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
     
-    return new Promise(resolve => {
-      mediaRecorder.onstop = async () => {
-        // Clean up audio stream
-        if (audioStream.current) {
-          audioStream.current.getTracks().forEach(track => track.stop());
-          audioStream.current = null;
-        }
-        
-        // Create blob from audio chunks
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        
-        // Only process if we actually got some audio data
-        if (audioBlob.size > 0) {
-          // Add user message first (transcript)
-          const userMessage = { 
-            type: 'user', 
-            text: `What's the weather like today?` 
-          };
-          setConversations(prev => [...prev, userMessage]);
-          
-          // Simulate sending to endpoint and getting response
-          setTimeout(() => {
-            // Mock response - in a real app, this would be from your API
-            const assistantResponse = {
-              type: 'assistant',
-              text: "Today's forecast shows partly cloudy skies with a high of 72°F and a low of 58°F. There's a 20% chance of rain in the evening."
-            };
-            
-            setConversations(prev => [...prev, assistantResponse]);
-            resolve(assistantResponse);
-          }, 1000);
-        }
-      };
+    mediaRecorder.stop();
+    setIsRecording(false);
+    setIsProcessing(true);
+    
+    mediaRecorder.onstop = async () => {
+      // Clean up audio stream
+      if (audioStream.current) {
+        audioStream.current.getTracks().forEach(track => track.stop());
+        audioStream.current = null;
+      }
       
-      mediaRecorder.stop();
-      setIsRecording(false);
-    });
+      // Create blob from audio chunks
+      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      
+      // Only process if we actually got some audio data
+      if (audioBlob.size > 0) {
+        try {
+          // Create FormData and append the audio blob
+          const formData = new FormData();
+          formData.append('audio', audioBlob, 'recording.webm');
+          
+          // Send to the transcription API
+          const response = await fetch('http://localhost:3000/api/aiagents/transcribe', {
+            method: 'POST',
+            body: formData,
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Server responded with ${response.status}`);
+          }
+          
+          const data = await response.json();
+          
+          // Extract the transcribed text
+          const transcribedText = data.text.trim();
+          
+          // Add user message with transcribed text
+          if (transcribedText) {
+            const userMessage = { 
+              type: 'user', 
+              text: transcribedText
+            };
+            setConversations(prev => [...prev, userMessage]);
+            
+            // Simulate assistant response
+            setTimeout(() => {
+              const assistantResponse = {
+                type: 'assistant',
+                text: "I've received your message. How can I help you with that?"
+              };
+              
+              setConversations(prev => [...prev, assistantResponse]);
+            }, 1000);
+          }
+        } catch (error) {
+          console.error("Error sending audio for transcription:", error);
+          alert("Failed to transcribe audio. Please try again.");
+        } finally {
+          setIsProcessing(false);
+        }
+      } else {
+        setIsProcessing(false);
+      }
+    };
   };
 
   // Event handlers for mouse/touch interactions
   const handlePointerDown = (e) => {
     e.preventDefault(); // Prevent default behavior
-    startRecording();
+    if (!isProcessing) {
+      startRecording();
+    }
   };
 
   const handlePointerUp = (e) => {
     e.preventDefault(); // Prevent default behavior
-    stopRecording();
+    if (isRecording) {
+      stopRecording();
+    }
   };
 
   const handlePointerLeave = (e) => {
@@ -157,10 +189,13 @@ function SendMoney({ onBack, onSend }) {
       <div className="p-6 flex items-center justify-center">
         <div className="relative mb-10">
           <button
+            disabled={isProcessing}
             className={`relative flex items-center justify-center rounded-full bg-gray-800 border-2 transition-all duration-300 ${
               isRecording 
                 ? 'border-green-400 scale-150 shadow-lg shadow-green-500/20' 
-                : 'border-white/20'
+                : isProcessing 
+                  ? 'border-yellow-400 opacity-70'
+                  : 'border-white/20'
             }`}
             style={{ width: '70px', height: '70px' }}
             onMouseDown={handlePointerDown}
@@ -171,7 +206,13 @@ function SendMoney({ onBack, onSend }) {
             onTouchCancel={handlePointerLeave}
           >
             {/* Mic icon */}
-            <Mic className={`w-8 h-8 ${isRecording ? 'text-green-400' : 'text-white/80'}`} />
+            <Mic className={`w-8 h-8 ${
+              isRecording 
+                ? 'text-green-400' 
+                : isProcessing 
+                  ? 'text-yellow-400 animate-pulse' 
+                  : 'text-white/80'
+            }`} />
             
             {/* Audio waves effect */}
             {isRecording && renderWaves()}
@@ -179,12 +220,16 @@ function SendMoney({ onBack, onSend }) {
           
           {/* Instructions */}
           <p className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-white/60 text-center text-sm whitespace-nowrap">
-            {isRecording ? "Release to send" : "Press and hold to speak"}
+            {isRecording
+              ? "Release to send"
+              : isProcessing
+                ? "Processing..."
+                : "Press and hold to speak"
+            }
           </p>
         </div>
       </div>
     </div>
   );
 }
-
 export default SendMoney
