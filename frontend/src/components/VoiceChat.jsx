@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Mic } from 'lucide-react';
+import { Mic , ArrowLeft} from 'lucide-react';
 
-function SendMoney({ onBack, onSend }) {
+function VoiceChat({ onBack, onSend }) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [conversations, setConversations] = useState([
@@ -66,7 +66,9 @@ function SendMoney({ onBack, onSend }) {
       }
       
       // Create blob from audio chunks
-      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); 
+      
+      console.log("Audio blob created, size:", audioBlob.size, "bytes");
       
       // Only process if we actually got some audio data
       if (audioBlob.size > 0) {
@@ -74,6 +76,9 @@ function SendMoney({ onBack, onSend }) {
           // Create FormData and append the audio blob
           const formData = new FormData();
           formData.append('audio', audioBlob, 'recording.webm');
+
+          // Send to the transcription API
+          console.log("Sending request to: http://localhost:3000/api/aiagents/transcribe");
           
           // Send to the transcription API
           const response = await fetch('http://localhost:3000/api/aiagents/transcribe', {
@@ -86,6 +91,9 @@ function SendMoney({ onBack, onSend }) {
           }
           
           const data = await response.json();
+
+          console.log("API Response:", JSON.stringify(data, null, 2));
+          console.log("Transcribed text:", data.text);
           
           // Extract the transcribed text
           const transcribedText = data.text.trim();
@@ -160,6 +168,11 @@ function SendMoney({ onBack, onSend }) {
 
   return (
     <div className={`flex flex-col h-screen ${isRecording ? 'bg-gray-950' : 'bg-gray-900'} transition-colors duration-300`}>
+    <div className="flex items-center gap-4 mb-6">
+      <button onClick={onBack} className="p-2">
+        <ArrowLeft className="w-6 h-6" />
+      </button>
+      </div>
       {/* Chat conversation area */}
       <div 
         ref={chatContainerRef}
@@ -232,4 +245,4 @@ function SendMoney({ onBack, onSend }) {
     </div>
   );
 }
-export default SendMoney
+export default VoiceChat
