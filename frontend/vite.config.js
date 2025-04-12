@@ -15,6 +15,6 @@ export default defineConfig({
   preview: {
     host: '0.0.0.0',
     port: process.env.PORT || 4173,
-    allowedHosts: ['zapbase.onrender.com'],
+    allowedHosts: ['zapbase.onrender.com','t-mini-app-1.onrender.com'],
   },
 });
