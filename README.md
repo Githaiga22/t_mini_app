@@ -8,6 +8,14 @@ This repository contains our submission for the **Virtuals Hackathon**, where we
 
 ## Getting Started
 
+###
+Access the Telegram bot [here](https://t.me/myUXCrushbot)
+
+To check the app is running, you can ping: you will get the response *Bot is running.*
+
+[*https://t-mini-app.onrender.com/health*](https://t-mini-app.onrender.com/health)
+
+
 ### Project Goals
 - Develop an **AI-powered autonomous agent** as the core of our solution.
 - Ensure deployment on **Base** with on-chain execution where applicable.
