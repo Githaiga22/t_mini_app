@@ -56,7 +56,7 @@ function SendMoney({ onBack, onSend }) {
           const formData = new FormData();
           formData.append('audio', audioBlob, 'recording.webm');
   
-          const response = await fetch('http://localhost:3000/api/aiagents/transcribe', {
+          const response = await fetch('https://zapbasevoicetotext.onrender.com/api/aiagents/transcribe', {
             method: 'POST',
             body: formData,
           });
