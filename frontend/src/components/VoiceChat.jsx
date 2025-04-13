@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
-import { Mic , ArrowLeft} from 'lucide-react';
+import { Mic, ArrowLeft } from 'lucide-react';
 
-function VoiceChat({ onBack }) {
+function SendMoney({ onBack, onSend }) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [conversations, setConversations] = useState([
     // Initial examples to show the chat layout
-    { type: 'user', text: "How do I reset my password?" },
-    { type: 'assistant', text: "To reset your password, go to the login page and click on 'Forgot Password'. You'll receive an email with instructions." }
+    { type: 'user', text: "Hi" },
+    { type: 'assistant', text: "Hello, how can I help you" }
   ]);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [audioChunks, setAudioChunks] = useState([]);
@@ -24,95 +24,62 @@ function VoiceChat({ onBack }) {
   // Function to start recording when button is pressed down
   const startRecording = async () => {
     try {
+      console.log("recording starting");
       setAudioChunks([]);
-      // Request microphone access
+  
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioStream.current = stream;
-      
-      // Create new media recorder
+  
       const recorder = new MediaRecorder(stream);
       setMediaRecorder(recorder);
-      
-      // Set up recorder event handlers
+  
+      const chunks = [];
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
-          setAudioChunks(prev => [...prev, e.data]);
+          chunks.push(e.data);
         }
       };
-      
-      // Start recording
-      recorder.start();
-      setIsRecording(true);
-      
-    } catch (err) {
-      console.error("Error accessing microphone:", err);
-      alert("Could not access your microphone. Please check permissions.");
-    }
-  };
   
-  // Function to stop recording when button is released
-  const stopRecording = async () => {
-    if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
-    
-    mediaRecorder.stop();
-    setIsRecording(false);
-    setIsProcessing(true);
-    
-    mediaRecorder.onstop = async () => {
-      // Clean up audio stream
-      if (audioStream.current) {
-        audioStream.current.getTracks().forEach(track => track.stop());
-        audioStream.current = null;
-      }
-      
-      // Create blob from audio chunks
-      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); 
-      
-      console.log("Audio blob created, size:", audioBlob.size, "bytes");
-      
-      // Only process if we actually got some audio data
-      if (audioBlob.size > 0) {
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(chunks, { type: "audio/webm" });
+        console.log("Audio blob created, size:", audioBlob.size, "bytes");
+  
+        if (audioBlob.size === 0) {
+          console.warn("Recorded blob is empty.");
+          return;
+        }
+  
+        setIsProcessing(true);
+  
         try {
-          // Create FormData and append the audio blob
+          // Send the audio blob to your transcription API
           const formData = new FormData();
           formData.append('audio', audioBlob, 'recording.webm');
-
-          // Send to the transcription API
-          console.log("Sending request to: http://localhost:3000/api/aiagents/transcribe");
-          
-          // Send to the transcription API
-          const response = await fetch('http://localhost:3000/api/aiagents/transcribe', {
+  
+          const response = await fetch('https://zapbasevoicetotext.onrender.com/api/aiagents/transcribe', {
             method: 'POST',
             body: formData,
           });
-          
+  
           if (!response.ok) {
             throw new Error(`Server responded with ${response.status}`);
           }
-          
+  
           const data = await response.json();
-
-          console.log("API Response:", JSON.stringify(data, null, 2));
-          console.log("Transcribed text:", data.text);
-          
-          // Extract the transcribed text
           const transcribedText = data.text.trim();
-          
-          // Add user message with transcribed text
+  
           if (transcribedText) {
-            const userMessage = { 
-              type: 'user', 
+            const userMessage = {
+              type: 'user',
               text: transcribedText
             };
             setConversations(prev => [...prev, userMessage]);
-            
-            // Simulate assistant response
+  
             setTimeout(() => {
               const assistantResponse = {
                 type: 'assistant',
                 text: "I've received your message. How can I help you with that?"
               };
-              
               setConversations(prev => [...prev, assistantResponse]);
             }, 1000);
           }
@@ -122,12 +89,31 @@ function VoiceChat({ onBack }) {
         } finally {
           setIsProcessing(false);
         }
-      } else {
-        setIsProcessing(false);
-      }
-    };
+      };
+  
+      recorder.start();
+      setIsRecording(true);
+  
+    } catch (err) {
+      console.error("Error accessing microphone:", err);
+      alert("Could not access your microphone. Please check permissions.");
+    }
   };
 
+  
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();
+      setIsRecording(false);
+    }
+  
+    if (audioStream.current) {
+      audioStream.current.getTracks().forEach(track => track.stop());
+    }
+
+
+  };
+  
   // Event handlers for mouse/touch interactions
   const handlePointerDown = (e) => {
     e.preventDefault(); // Prevent default behavior
@@ -245,4 +231,4 @@ function VoiceChat({ onBack }) {
     </div>
   );
 }
-export default VoiceChat
+export default SendMoney
