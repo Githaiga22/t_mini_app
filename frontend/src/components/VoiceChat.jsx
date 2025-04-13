@@ -66,7 +66,16 @@ function SendMoney({ onBack, onSend }) {
           }
   
           const data = await response.json();
-          const transcribedText = data.text.trim();
+
+          console.log(data)
+     
+          const transcribedText = data.transcription.text;
+          let transactionHx = data.transaction
+
+          if (!transactionHx ){
+            transactionHx = '';
+          }
+        
   
           if (transcribedText) {
             const userMessage = {
@@ -86,7 +95,7 @@ function SendMoney({ onBack, onSend }) {
               },
               body: JSON.stringify({
                 chatID: chatID,
-                text: transcribedText
+                text: transcribedText + transactionHx
               }),
             });
           
@@ -95,7 +104,9 @@ function SendMoney({ onBack, onSend }) {
             }
           
             const responseData = await sendResponse.json();
-  
+            // 
+            console.log(responseData.transferData)
+
             setTimeout(() => {
               const assistantResponse = {
                 type: 'assistant',
@@ -103,7 +114,6 @@ function SendMoney({ onBack, onSend }) {
               };
               setConversations(prev => [...prev, assistantResponse]);
             }, 1000);
-
 
           }
         } catch (error) {
