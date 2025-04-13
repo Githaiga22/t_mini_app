@@ -103,6 +103,7 @@ function App() {
         <SendMoney
           onBack={handleBack}
           onSend={handleSendMoneyAction}
+          onNavigate={handleNavigation}
         />
       )}
       {currentScreen === screens.SEND_AI && (

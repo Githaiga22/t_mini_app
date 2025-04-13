@@ -1,7 +1,7 @@
 import { ArrowLeft, Mic } from 'lucide-react'
 import { useState } from 'react'
 
-function SendMoney({ onBack, onSend }) {
+function SendMoney({ onBack, onSend, onNavigate }) {
   const [amount, setAmount] = useState('0.5')
   const [receiver, setReceiver] = useState('John.base.eth')
 
@@ -23,7 +23,7 @@ function SendMoney({ onBack, onSend }) {
 
         {/* AI Button */}
         <button 
-          onClick={() => onSend('ai')}
+          onClick={() => onNavigate('voice_chat')}
           className="w-full bg-white/5 rounded-full p-3 mb-8 flex items-center gap-2 border border-white/10"
         >
           <Mic className="w-5 h-5 text-[#00FF7F]" />
