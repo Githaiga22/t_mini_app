@@ -40,6 +40,7 @@ function parseCommand(text) {
     }
   }
 
+  console.log(lower)
   const match = lower.match(
     /send\s+([\d.]+|zero point \d+)\s+(ethereum|eth)\s+to\s+([\w\s.-]+(?: dot base dot eth| dot eth))/
   );
