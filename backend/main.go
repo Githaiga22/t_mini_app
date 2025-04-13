@@ -28,6 +28,23 @@ type TransferIntent struct {
 var pendingTransfers = make(map[int64]TransferIntent) // chatID → intent
 
 func main() {
+	corsMiddleware := func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			// Set CORS headers
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+			// Handle preflight requests (OPTIONS)
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			// Process the actual request
+			next(w, r)
+		}
+	}
 	// err := godotenv.Load()
 	// if err != nil {
 	// 	fmt.Printf("Error loading .env file: %v", err)
@@ -63,6 +80,73 @@ func main() {
 		fmt.Fprintln(w, "Bot is running.")
 	})
 
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "Server is running.")
+	})
+
+	http.HandleFunc("/send-response", corsMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		// Check if the request is a POST request
+		if r.Method != http.MethodPost {
+			http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+			return
+		}
+
+		// Read the request body
+		var requestData struct {
+			ChatID string `json:"chatID"`
+			Text   string `json:"text"`
+		}
+
+		err := json.NewDecoder(r.Body).Decode(&requestData)
+		if err != nil {
+			http.Error(w, "Failed to parse request body", http.StatusBadRequest)
+			return
+		}
+
+		// Check for transfer command using the extracted function
+		isTransfer, transferData := extractTransferInfo(requestData.Text)
+
+		// Create response object
+		response := map[string]interface{}{
+			"success": false,
+			"message": "No transfer command detected",
+		}
+
+		if isTransfer {
+			response = map[string]interface{}{
+				"success": true,
+				"message": fmt.Sprintf("Transfer of %s %s to %s detected",
+					transferData["amount"],
+					transferData["token"],
+					transferData["recipient"]),
+				"transfer": transferData,
+			}
+
+			// Here you would trigger your sendCrypto function
+			// sendCrypto(transferData["amount"], transferData["token"], transferData["recipient"])
+		} else {
+			// call ai response function
+
+			message, err := getAIResponseGemini(requestData.Text)
+			if err != nil {
+				response = map[string]interface{}{
+					"success": false,
+					"message": "Error getting AI response",
+				}
+			} else {
+				response = map[string]interface{}{
+					"success": true,
+					"message": message,
+				}
+			}
+		}
+
+		// Send response
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	}))
+
+	
 	// Start server in background
 	go func() {
 		log.Println("Starting HTTP server on :10000")
@@ -78,6 +162,40 @@ func main() {
 
 		// }
 	}
+	// log.Println("Starting HTTP server on :9000")
+	// log.Fatal(http.ListenAndServe(":9000", nil))
+}
+
+// Function to check and extract transfer information from text
+func extractTransferInfo(text string) (bool, map[string]string) {
+	// Define a regex pattern to capture the funds transfer information
+	// Example: "Send 0.5 ETH to john.doe.base.eth"
+	transferPattern := `(?i)send\s+([\d.]+)\s*(eth|token)?\s+to\s+([a-zA-Z0-9.-]+\.base\.eth)`
+
+	// Use regex to match the pattern in the user message
+	re := regexp.MustCompile(transferPattern)
+	matches := re.FindStringSubmatch(text)
+
+	// If we found a match, process the transfer command
+	if len(matches) >= 4 {
+		amount := matches[1]
+		token := matches[2]
+		if token == "" {
+			token = "ETH" // Default to ETH if not specified
+		}
+		recipient := matches[3]
+
+		// Return the transfer details
+		transferData := map[string]string{
+			"amount":    amount,
+			"token":     strings.ToUpper(token),
+			"recipient": recipient,
+		}
+
+		return true, transferData
+	}
+
+	return false, nil
 }
 
 func getContext(input string, chatId int64, userId int64) string {
