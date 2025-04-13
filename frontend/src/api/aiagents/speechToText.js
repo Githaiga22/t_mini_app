@@ -1,76 +1,91 @@
-import fs from "fs";              // For file system operations
-import path from "path";          // For handling file paths
-import Groq from "groq-sdk";      // Groq API client for AI services
-import multer from "multer";      // Middleware for handling multipart/form-data
-import express from "express";    // Web framework
-import dotenv from "dotenv";      // For loading environment variables
-import FormData from "form-data"; // For creating multipart form data
+import fs from "fs";
+import path from "path";
+import Groq from "groq-sdk";
+import multer from "multer";
+import express from "express";
+import dotenv from "dotenv";
+import FormData from "form-data";
+import { sendEthToRecipient } from "./assetSender.js";
 
-// Load environment variables from .env file
 dotenv.config();
 
-// Initialize Groq client with API key from environment variables
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
-// Create an Express router to handle API routes
 const router = express.Router();
-
-// Configure multer to store uploaded files in the 'uploads' directory
 const upload = multer({ dest: path.join(process.cwd(), "uploads/") });
-
-// POST endpoint for audio transcription
-// Uses multer middleware to handle the file upload named "audio"
-router.post("/transcribe", upload.single("audio"), async (req, res) => {
-    try {
-        // Check if a file was actually uploaded
-        if (!req.file) {
-            return res.status(400).json({ error: "No audio file uploaded" });
-        }
-
-        // Get the path where multer saved the uploaded file (without extension)
-        const filePath = req.file.path;
-        
-        // Extract the original file extension or default to .mp3
-        const extension = path.extname(req.file.originalname) || ".mp3";
-        
-        // Create a new path with the proper extension
-        const tempPath = filePath + extension;
-
-        // Rename the file to include the extension
-        // This is needed because multer stores files without extensions
-        fs.renameSync(filePath, tempPath);
-
-        // Log information about the uploaded file for debugging
-        console.log("Uploaded file:", req.file);
-
-        // Call the Groq API to transcribe the audio file
-        const transcription = await groq.audio.transcriptions.create({
-            file: fs.createReadStream(tempPath),  // Create a readable stream from the file
-            model: "whisper-large-v3-turbo",      // Use Whisper large model
-            response_format: "verbose_json",       // Get detailed JSON response
-            timestamp_granularities: ["segment", "word"], // Include timestamps at segment and word level
-            language: "en",                        // Specify English language
-            temperature: 0.0,                      // Use deterministic output (no randomness)
-        });
-
-        // Remove the temporary file after processing
-        fs.unlinkSync(tempPath);
-
-        // Return the transcription result to the client
-        res.json(transcription);
-    } catch (error) {
-        // Log any errors that occur during transcription
-        console.error("Transcription error:", error);
-        
-        // If there's API response data in the error, log that too
-        if (error.response?.data) {
-            console.error("API Error Details:", error.response.data);
-        }
-        
-        // Return an error response to the client
-        res.status(500).json({ error: error.message });
+function parseCommand(text) {
+    const lower = text.toLowerCase().replace(/,/g, "");// Remove punctuation
+  
+    // Convert common mishearing patterns (optional - you can expand this)
+    const corrections = {
+      "fregetongat baysteth": "fredgitonga dot base dot eth",
+      "fred gitonga base eth": "fredgitonga dot base dot eth",
+      "base death": "base dot eth",
+      "base f": "base dot eth",
+    };
+  
+    for (const wrong in corrections) {
+      if (lower.includes(wrong)) {
+        text = lower.replace(wrong, corrections[wrong]);
+        break;
+      }
     }
+  
+    const match = text.match(/send ([\d.]+|zero point \d+) (ethereum|eth) to ([\w\s.-]+(?: dot base dot eth| dot eth))/);
+    if (!match) return null;
+  
+    let amountStr = match[1];
+    let recipientRaw = match[3];
+  
+    amountStr = amountStr.replace(/zero point ([\d]+)/, "0.$1");
+    const recipient = recipientRaw.trim().replace(/\s+/g, '').replace(/dot/g, '.');
+  
+    return {
+      amount: parseFloat(amountStr),
+      recipient
+    };
+  }
+  
+router.post("/transcribe", upload.single("audio"), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: "No audio file uploaded" });
+
+    const filePath = req.file.path;
+    const extension = path.extname(req.file.originalname) || ".mp3";
+    const tempPath = filePath + extension;
+    fs.renameSync(filePath, tempPath);
+
+    const transcription = await groq.audio.transcriptions.create({
+      file: fs.createReadStream(tempPath),
+      model: "whisper-large-v3-turbo",
+      response_format: "verbose_json",
+      timestamp_granularities: ["segment", "word"],
+      language: "en",
+      temperature: 0.0,
+    });
+
+    fs.unlinkSync(tempPath);
+
+    const fullText = transcription.text;
+    const command = parseCommand(fullText);
+
+    let txResult = null;
+
+    if (command) {
+      console.log("Parsed send command:", command);
+      txResult = await sendEthToRecipient(command.recipient, command.amount);
+    }
+
+    res.json({
+      transcription,
+      commandDetected: !!command,
+      parsedCommand: command,
+      transaction: txResult,
+    });
+
+  } catch (error) {
+    console.error("Transcription error:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// Export the router for use in the main server file
 export default router;
