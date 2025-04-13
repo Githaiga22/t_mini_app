@@ -74,14 +74,37 @@ function SendMoney({ onBack, onSend }) {
               text: transcribedText
             };
             setConversations(prev => [...prev, userMessage]);
+
+            //  Generate a unique chatID or use a persistent one for the session
+            const chatID = "session-" + Date.now();
+                
+            // Send transcribed text to your backend for processing
+            const sendResponse = await fetch('https://t-mini-app.onrender.com/send-response', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                chatID: chatID,
+                text: transcribedText
+              }),
+            });
+          
+            if (!sendResponse.ok) {
+              throw new Error(`Response endpoint error: ${sendResponse.status}`);
+            }
+          
+            const responseData = await sendResponse.json();
   
             setTimeout(() => {
               const assistantResponse = {
                 type: 'assistant',
-                text: "I've received your message. How can I help you with that?"
+                text: responseData.message
               };
               setConversations(prev => [...prev, assistantResponse]);
             }, 1000);
+
+
           }
         } catch (error) {
           console.error("Error sending audio for transcription:", error);
