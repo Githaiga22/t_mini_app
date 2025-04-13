@@ -35,7 +35,7 @@ function SendMoney({ onBack, onSend, onNavigate }) {
           <p className="text-gray-400 mb-2">Pay with</p>
           <div className="flex items-center gap-2 mb-4">
             <button className="bg-white/10 px-4 py-2 rounded-full flex items-center gap-2">
-              <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" className="w-5 h-5" alt="USDT" />
+              <img src="./tether-usdt-logo.png" className="w-5 h-5" alt="USDT" />
               <span>USDT</span>
             </button>
             <span className="text-gray-400">Balance: 1,235</span>
