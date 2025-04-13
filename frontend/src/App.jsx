@@ -10,6 +10,7 @@ import SendMoneyAIVoice from './components/SendMoneyAIVoice.jsx'
 import Confirmation from './components/Confirmation.jsx'
 import Success from './components/Success.jsx'
 import Message from './components/Message.jsx'
+import VoiceChat from './components/VoiceChat.jsx'
 
 const screens = {
   SPLASH: 'splash',
@@ -21,7 +22,8 @@ const screens = {
   SEND_AI_VOICE: 'send_ai_voice',
   CONFIRMATION: 'confirmation',
   SUCCESS: 'success',
-  MESSAGE: 'message'
+  MESSAGE: 'message',
+  VOICE_CHAT: 'voice_chat'
 }
 
 function App() {
@@ -94,10 +96,14 @@ function App() {
       {currentScreen === screens.DASHBOARD && (
         <Dashboard onNavigate={handleNavigation} />
       )}
-      {currentScreen === screens.SEND && (
+      {currentScreen === screens.VOICE_CHAT && (
+        <VoiceChat onBack={() => setCurrentScreen(screens.DASHBOARD)} />
+      )}
+       {currentScreen === screens.SEND && (
         <SendMoney
           onBack={handleBack}
           onSend={handleSendMoneyAction}
+          onNavigate={handleNavigation}
         />
       )}
       {currentScreen === screens.SEND_AI && (
