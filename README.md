@@ -79,7 +79,7 @@ Example using cURL:
 
 ```
 curl -X POST http://localhost:3000/api/aiagents/transcribe   -H "Content-Type: multipart/form-data"   
--F "audio=@/home/ken/Projects/t_mini_app/frontend/uploads/voicemail.mp3"
+-F "audio=@/home/ken/Projects/t_mini_app/frontend/uploads/sendassets.mp3"
 ```
 
 ## Deadlines
