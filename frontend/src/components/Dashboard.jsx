@@ -115,9 +115,9 @@ function Dashboard({ onNavigate }) {
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-400">Available Asset</span>
             <div className="flex -space-x-1">
-              <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" className="w-5 h-5" alt="BTC" />
-              <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" className="w-5 h-5" alt="ETH" />
-              <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" className="w-5 h-5" alt="USDT" />
+              <img src="./usd-coin-usdc-logo.png" className="w-5 h-5" alt="USDC" />
+              <img src="./ethereum-eth-logo.png" className="w-5 h-5" alt="ETH" />
+              <img src="./tether-usdt-logo.png" className="w-5 h-5" alt="USDT" />
             </div>
             <button className="ml-auto text-[#00FF7F]">View more</button>
           </div>
