@@ -80,7 +80,7 @@ func main() {
 		fmt.Fprintln(w, "Bot is running.")
 	})
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/home", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Server is running.")
 	})
 
