@@ -91,7 +91,7 @@ function Dashboard({ onNavigate }) {
 
         {/* AI Command Input */}
         <button 
-          onClick={() => setShowAIPopup(true)}
+          onClick={() => onNavigate('voice_chat')}
           className="w-full bg-white/5 rounded-full p-3 mb-6 flex items-center gap-2 border border-white/10"
         >
           <div className="flex-1 flex items-center gap-2">
@@ -200,7 +200,7 @@ function Dashboard({ onNavigate }) {
         </div>
 
         {/* AI Assistant Popup */}
-        {showAIPopup && (
+        {/* {showAIPopup && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
             <div className="bg-[#0F1729] rounded-3xl p-6 w-full max-w-md">
               <div className="flex items-center justify-between mb-6">
@@ -219,7 +219,7 @@ function Dashboard({ onNavigate }) {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   )
