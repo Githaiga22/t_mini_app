@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Mic , ArrowLeft} from 'lucide-react';
 
-function VoiceChat({ onBack, onSend }) {
+function VoiceChat({ onBack }) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [conversations, setConversations] = useState([
