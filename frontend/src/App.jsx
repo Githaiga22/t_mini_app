@@ -38,17 +38,17 @@ function App() {
     {
       title: "Send Crypto to Base name with just your voice",
       description: "No more long wallet addresses! Just speak or type your transaction, and our AI will handle the rest!",
-      illustration: "./image1.png"
+      illustration: "/image1.png"
     },
     {
       title: "Fast, Secure & Seamless Transactions",
       description: "Our AI makes sending crypto via your Domain name seamless",
-      illustration: "image2.png"
+      illustration: "/image2.png"
     },
     {
       title: "Let's Get Started!",
       description: "Ready to experience the future of crypto transactions?",
-      illustration: "image3.png"
+      illustration: "/image3.png"
     }
   ]
 
