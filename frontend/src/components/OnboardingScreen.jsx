@@ -6,8 +6,12 @@ function OnboardingScreen({ data, onNext, currentStep, totalSteps }) {
       <div className="onboarding-curve" />
       
       <div className="relative z-10 flex flex-col items-center px-6 pt-20">
-        <div className="w-64 h-64 rounded-full bg-gray-800 flex items-center justify-center mb-8">
-          {data.icon}
+        <div className="w-64 h-64 rounded-full bg-gray-800 flex items-center justify-center mb-8 overflow-hidden">
+          <img
+            src={data.illustration}
+            alt={data.title}
+            className="w-full h-full object-cover"
+          />
         </div>
         
         <h2 className="text-2xl font-bold text-center mb-4">{data.title}</h2>
