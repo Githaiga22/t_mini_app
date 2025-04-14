@@ -38,17 +38,17 @@ function App() {
     {
       title: "Send Crypto to Base name with just your voice",
       description: "No more long wallet addresses! Just speak or type your transaction, and our AI will handle the rest!",
-      illustration: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&q=80&w=400&h=400"
+      illustration: "./image1.png"
     },
     {
       title: "Fast, Secure & Seamless Transactions",
       description: "Our AI makes sending crypto via your Domain name seamless",
-      illustration: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&q=80&w=400&h=400"
+      illustration: "image2.png"
     },
     {
       title: "Let's Get Started!",
       description: "Ready to experience the future of crypto transactions?",
-      illustration: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&q=80&w=400&h=400"
+      illustration: "image3.png"
     }
   ]
 
