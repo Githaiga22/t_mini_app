@@ -88,7 +88,7 @@ function SendMoney({ onBack, onSend }) {
             const chatID = "session-" + Date.now();
                 
             // Send transcribed text to your backend for processing
-            const sendResponse = await fetch('https://t-mini-app.onrender.com/send-response', {
+            const sendResponse = await fetch('https://zapbasebot.onrender.com/send-response', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
