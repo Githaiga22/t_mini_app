@@ -21,27 +21,27 @@ function parseCommand(text) {
 
   // Fix common speech-to-text errors in the full text
   lower = lower
-    .replace(/\.th\b/g, " eth")
-    .replace(/\.eth\b/g, " eth")
+    .replace(/.th\b/g, " eth")
+    .replace(/.eth\b/g, " eth")
     .replace(/\bmth\b/g, " eth")
     .replace(/into h/g, " eth")
-    .replace(/\.88\b/g, ".eth")
-    .replace(/\.biz\.eth/g, ".base.eth")
-    .replace(/\.bez\.eth/g, ".base.eth")
-    .replace(/\.es\.eth/g, ".base.eth")
+    .replace(/.88\b/g, ".eth")
+    .replace(/.biz.eth/g, ".base.eth")
+    .replace(/.bez.eth/g, ".base.eth")
+    .replace(/.es.eth/g, ".base.eth")
     .replace(/fredmitonga/g, "fredgitonga")
     .replace(/fredgetonga/g, "fredgitonga");
 
   console.log("Pre-processed text:", lower);
 
-  // Regex patterns to match various speech-to-text variations
+  // Corrected regex patterns without character classes for the capture groups
   const patterns = [
-    /send\s+([\d.]+)\s+eth\s+to\s+([\w.-]+)/i,
-    /send\s+([\d.]+)\s+to\s+([\w.-]+)/i,
-    /send\s+([\d.]+)(?:\s+\w+)?\s+(?:eth)?\s+to\s+([\w.-]+)/i
+    /\bsend\s+(\d+\.?\d*)\s*(?:eth|ethereum)?\s*to\s+([a-zA-Z0-9.-]+)\b/,
+    /\bsend\s+(\d+\.?\d*)\s+to\s+([a-zA-Z0-9.-]+)\b/
   ];
 
-  let match = null; // ✅ THIS MUST BE OUTSIDE THE LOOP
+
+  let match = null;
 
   for (const pattern of patterns) {
     match = lower.match(pattern);
@@ -65,7 +65,6 @@ function parseCommand(text) {
 
   return { amount, recipient };
 }
-
 // Updated /transcribe endpoint with more robust command handling
 router.post("/transcribe", upload.single("audio"), async (req, res) => {
   try {
