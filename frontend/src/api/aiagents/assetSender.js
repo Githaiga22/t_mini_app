@@ -44,7 +44,7 @@ try {
   console.error("Failed to initialize wallet:", error);
 }
 
-// Enhanced sendEthToRecipient function with better error handling
+// Enhanced sendEthToRecipient function with gas fee calculation and display
 export async function sendEthToRecipient(nameOrAddress, amountEth) {
   try {
     console.log(`Attempting to send ${amountEth} ETH to ${nameOrAddress}`);
@@ -84,6 +84,7 @@ export async function sendEthToRecipient(nameOrAddress, amountEth) {
 
     // Process the recipient address
     let recipient = nameOrAddress.trim();
+    let recipientAddress = null;
 
     // Handle address resolution based on domain
     if (!ethers.utils.isAddress(recipient)) {
@@ -93,28 +94,30 @@ export async function sendEthToRecipient(nameOrAddress, amountEth) {
         // Handle base.eth domains
         if (recipient.endsWith('.base.eth')) {
           console.log("Resolving Base name");
-          recipient = await ResolveBaseName(recipient);
-          console.log(`Resolved to: ${recipient}`);
+          recipientAddress = await ResolveBaseName(recipient);
+          console.log(`Resolved to: ${recipientAddress}`);
         } 
         // Handle regular .eth domains
         else if (recipient.endsWith('.eth')) {
           console.log("Resolving ENS name");
-          recipient = await provider.resolveName(recipient);
-          console.log(`Resolved to: ${recipient}`);
+          recipientAddress = await provider.resolveName(recipient);
+          console.log(`Resolved to: ${recipientAddress}`);
         }
         
         // Verify resolution was successful
-        if (!recipient || !ethers.utils.isAddress(recipient)) {
+        if (!recipientAddress || !ethers.utils.isAddress(recipientAddress)) {
           throw new Error(`Unable to resolve address for ${nameOrAddress}`);
         }
       } catch (resolutionError) {
         console.error("Name resolution error:", resolutionError);
         throw new Error(`Failed to resolve ${nameOrAddress}: ${resolutionError.message}`);
       }
+    } else {
+      recipientAddress = recipient;
     }
 
     // Prepare and send the transaction
-    console.log(`Sending ${amountEth} ETH to resolved address: ${recipient}`);
+    console.log(`Sending ${amountEth} ETH to resolved address: ${recipientAddress}`);
 
     try {
       // Check wallet balance before sending
@@ -123,19 +126,33 @@ export async function sendEthToRecipient(nameOrAddress, amountEth) {
       
       console.log(`Wallet balance: ${ethers.utils.formatEther(balance)} ETH`);
       
-      if (balance.lt(requiredWei)) {
-        throw new Error(`Insufficient wallet balance. Current: ${ethers.utils.formatEther(balance)} ETH, Required: ${amount} ETH`);
+      // Get current gas price
+      const feeData = await provider.getFeeData();
+      const gasLimit = 21000; // Standard gas limit for ETH transfers
+      
+      // Calculate gas cost
+      const maxFeePerGas = feeData.maxFeePerGas || ethers.utils.parseUnits('10', 'gwei');
+      const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas || ethers.utils.parseUnits('1.5', 'gwei');
+      
+      const estimatedGasCost = gasLimit * maxFeePerGas;
+      const totalTransactionCost = requiredWei.add(estimatedGasCost);
+      
+      console.log(`Transaction details:`);
+      console.log(`- ETH amount: ${ethers.utils.formatEther(requiredWei)} ETH`);
+      console.log(`- Estimated gas cost: ${ethers.utils.formatEther(estimatedGasCost)} ETH`);
+      console.log(`- Total cost (including gas): ${ethers.utils.formatEther(totalTransactionCost)} ETH`);
+      
+      if (balance.lt(totalTransactionCost)) {
+        throw new Error(`Insufficient wallet balance. Current: ${ethers.utils.formatEther(balance)} ETH, Required (with gas): ${ethers.utils.formatEther(totalTransactionCost)} ETH`);
       }
       
       // Build transaction with proper gas parameters
       const tx = {
-        to: recipient,
-        value: ethers.utils.parseEther(amount.toString()),
-        // Using EIP-1559 parameters for reliable transactions
-        type: 2,
-        maxFeePerGas: ethers.utils.parseUnits("50", "gwei"),
-        maxPriorityFeePerGas: ethers.utils.parseUnits("2", "gwei"),
-        gasLimit: 21000 * 2 // Standard gas limit with buffer
+        to: recipientAddress,
+        value: requiredWei,
+        gasLimit: gasLimit,
+        maxPriorityFeePerGas: maxPriorityFeePerGas,
+        maxFeePerGas: maxFeePerGas,
       };
       
       // Send transaction and wait for receipt
@@ -144,20 +161,30 @@ export async function sendEthToRecipient(nameOrAddress, amountEth) {
       
       const receipt = await txResponse.wait(1); // Wait for 1 confirmation
       
+      // Calculate actual gas used and cost
+      const actualGasUsed = receipt.gasUsed;
+      const actualGasCost = receipt.effectiveGasPrice.mul(actualGasUsed);
+      
+      console.log(`Actual gas used: ${actualGasUsed.toString()}`);
+      console.log(`Actual gas cost: ${ethers.utils.formatEther(actualGasCost)} ETH`);
+      console.log(`Total transaction cost: ${ethers.utils.formatEther(requiredWei.add(actualGasCost))} ETH`);
+      
       return { 
         success: true, 
         txHash: txResponse.hash, 
-        to: recipient,
+        to: recipientAddress,
         amount: amount,
         confirmations: receipt.confirmations,
-        blockNumber: receipt.blockNumber
+        blockNumber: receipt.blockNumber,
+        gasCost: ethers.utils.formatEther(actualGasCost),
+        totalCost: ethers.utils.formatEther(requiredWei.add(actualGasCost))
       };
     } catch (txError) {
       console.error("Transaction failed:", txError);
       return { 
         success: false, 
         error: txError.message,
-        to: recipient,
+        to: recipientAddress,
         amount: amount 
       };
     }
