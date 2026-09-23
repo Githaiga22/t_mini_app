@@ -5,9 +5,13 @@ import './index.css';
 import { ThirdwebProvider } from "@thirdweb-dev/react";
 
 // Base Sepolia chain config
+// RPC endpoint comes from the environment so no provider key is committed.
+// Falls back to the public Base Sepolia RPC when VITE_BASE_SEPOLIA_RPC_URL is unset.
+const rpcUrl = import.meta.env.VITE_BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org";
+
 const activeChain = {
   chainId: 84532, // Base Sepolia
-  rpc: ["https://base-sepolia.infura.io/v3/5b44508b90054bc2a316745f3dbe6a37"],
+  rpc: [rpcUrl],
   nativeCurrency: {
     name: "ETH",
     symbol: "ETH",
@@ -24,7 +28,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ThirdwebProvider 
       activeChain={activeChain}
-      clientId="YOUR_CLIENT_ID_HERE" // Optional: Replace with your ThirdWeb client ID
+      clientId={import.meta.env.VITE_THIRDWEB_CLIENT_ID}
     >
       <App />
     </ThirdwebProvider>

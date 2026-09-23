@@ -76,6 +76,27 @@ Voice recognition is handled externally (e.g., browser or mobile), with text com
 ---
 ## Front-end
 
+### Configure environment variables
+
+Copy the example file and fill in your own values. `.env.local` is git-ignored;
+never commit a filled-in env file.
+
+```
+cd frontend
+cp .env.example .env.local
+```
+
+| Variable | Purpose |
+| --- | --- |
+| `VITE_BASE_SEPOLIA_RPC_URL` | JSON-RPC endpoint for Base Sepolia (Infura/Alchemy/etc.). Optional - defaults to the public `https://sepolia.base.org`. |
+| `VITE_THIRDWEB_CLIENT_ID` | ThirdWeb client ID. |
+| `VITE_PUBLIC_ONCHAINKIT_API_KEY` | Coinbase OnchainKit API key. |
+| `VITE_CHAIN` | `baseSepolia` for testnet, anything else for Base mainnet. |
+
+> Anything prefixed with `VITE_` is bundled into the client and is readable by
+> anyone using the app. Only use keys that are domain-restricted and can be
+> rotated; keep genuinely secret credentials in the backend.
+
 ### How to run
 **Start the server**
    ```
